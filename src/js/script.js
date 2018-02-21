@@ -1,4 +1,4 @@
-// window.onload = init;
+window.onload = init;
 
 let test;
 
@@ -73,8 +73,8 @@ function init() {
 			silver:			new Card(40, 3, 2, 0)
 		},
 		victory_cards: {
-			estate:			new Card(24, 2, 0, 1),
 			duchy:			new Card(12, 5, 0, 3),
+			estate:			new Card(24, 2, 0, 1),
 			province:		new Card(12, 8, 0, 6)
 		}
 	};
@@ -88,7 +88,7 @@ function init() {
 	cardsInPlay.treasure_cards = cards.treasure_cards;
 	cardsInPlay.victory_cards = cards.victory_cards;
 	cardsInPlay.kingdom_cards = {};
-	
+
 	for (let card in cardsInPlay.victory_cards) {
 		cardsInPlay.victory_cards[card].qty = 8 + 4 * (numPlayers > 2);
 	}
@@ -125,20 +125,32 @@ function init() {
 		}
 	}
 
-	function getCard(cardCategory, cardName) {
+	function printCards(cards, targetSelector) {
+		let target = document.querySelector(targetSelector);
+
+		for (let name in cards) {
+			let card = document.createElement('div');
+
+			card.className = 'card ' + name;
+
+			target.append(card);
+		}
+	}
+
+	function getCard(cardCategory, cardName, player) {
 		if (cardsInPlay[cardCategory][cardName] > 0) {
 			cardsInPlay[cardCategory][cardName].qty--;
 
 			player.cards.discard.push(cardsInPlay[cardCategory][cardName]);
 			player.cards.discard.name = cardName;
-			return true
-		} else {
-			alert('There are no more cards in this stack');
-			return false;
+			return true;
 		}
+
+		alert('There are no more cards in this stack');
+		return false;
 	}
 
-	test = cardsInPlay;
+	printCards(cardsInPlay.victory_cards, '#cardsInPlay .victory-cards');
+	printCards(cardsInPlay.treasure_cards, '#cardsInPlay .treasure-cards');
+	printCards(cardsInPlay.kingdom_cards, '#cardsInPlay .kingdom-cards');
 }
-
-init();

@@ -1,0 +1,81 @@
+body {
+	margin: 0;
+}
+
+div {
+	border: 1px solid #000;
+}
+
+footer {
+	background: #000;
+	height: 75px;
+}
+
+header {
+	background: #000;
+	height: 75px;
+}
+
+.board {
+	padding: 10px;
+	overflow-y: hidden;
+}
+
+.card {
+	box-sizing: border-box;
+	display: inline-block;
+	float: left;
+	height: 11vw;
+	width: 8vw;
+}
+
+.center {
+	display: block;
+	margin: 0 auto;
+	width: fit-content;
+}
+
+.col {
+	box-sizing: border-box;
+	display: inline-block;
+	float: left;
+	height: 100%;
+}
+
+.col-2 {
+	width: 16.66%;
+}
+
+.col-4 {
+	width: 33.33%;
+}
+
+.col-8 {
+	width: 66.66%;
+}
+
+#cardsInPlay {
+	height: 50%;
+}
+
+#content {
+	height: calc(100vh - 150px);
+}
+
+#playerCards {
+	height: 50%;
+}
+
+@media screen and (max-width: 768px) {
+	.card {
+		height: 22vw;
+		width: 16vw;
+	}
+}
+
+@media screen and (max-width: 480px) {
+	.card {
+		height: 55vw;
+		width: 40vw;
+	}
+}
