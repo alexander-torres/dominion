@@ -129,7 +129,7 @@ function init() {
 		let target = document.querySelector(targetSelector);
 
 		for (let name in cards) {
-			let card = document.createElement('div');
+			let card = document.createElement('img');
 
 			card.className = 'card ' + name;
 
@@ -138,19 +138,24 @@ function init() {
 	}
 
 	function getCard(cardCategory, cardName, player) {
+		let hasCard = false;
+
 		if (cardsInPlay[cardCategory][cardName] > 0) {
 			cardsInPlay[cardCategory][cardName].qty--;
 
 			player.cards.discard.push(cardsInPlay[cardCategory][cardName]);
 			player.cards.discard.name = cardName;
-			return true;
+			hasCard = true;
 		}
 
 		alert('There are no more cards in this stack');
-		return false;
+		return hasCard;
 	}
 
 	printCards(cardsInPlay.victory_cards, '#cardsInPlay .victory-cards');
 	printCards(cardsInPlay.treasure_cards, '#cardsInPlay .treasure-cards');
 	printCards(cardsInPlay.kingdom_cards, '#cardsInPlay .kingdom-cards');
+	printCards(players.player1.cards.deck, '#playerCards .deck');
+
+	test = players;
 }

@@ -1,45 +1,31 @@
-body {
+body, html, #content {
+	height: 100%;
 	margin: 0;
 }
 
 div {
-	border: 1px solid #000;
-}
-
-footer {
-	background: #000;
-	height: 75px;
-}
-
-header {
-	background: #000;
-	height: 75px;
+	box-sizing: border-box;
 }
 
 .board {
 	padding: 10px;
-	overflow-y: hidden;
 }
 
 .card {
 	box-sizing: border-box;
-	display: inline-block;
-	float: left;
-	height: 11vw;
-	width: 8vw;
+	height: 220px;
+	width: 160px;
 }
 
 .center {
-	display: block;
-	margin: 0 auto;
-	width: fit-content;
+	text-align: center;
 }
 
 .col {
-	box-sizing: border-box;
-	display: inline-block;
 	float: left;
 	height: 100%;
+	overflow-y: auto;
+	position: relative;
 }
 
 .col-2 {
@@ -55,15 +41,16 @@ header {
 }
 
 #cardsInPlay {
-	height: 50%;
-}
-
-#content {
-	height: calc(100vh - 150px);
+	height: 67%;
 }
 
 #playerCards {
-	height: 50%;
+	height: 33%;
+}
+
+.deck .card, .discard .card {
+	position: absolute;
+	transform: translateX(-50%);
 }
 
 @media screen and (max-width: 768px) {
