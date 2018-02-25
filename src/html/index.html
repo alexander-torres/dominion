@@ -7,19 +7,17 @@
 </head>
 <body>
 	<section id="content">
-		<div class="board" id="cardsInPlay">
-			<div class="center col col-4">
-				<div class="victory-cards"></div>
-				<div class="treasure-cards"></div>
+		<div class="row row-4" id="cardsInPlay">
+			<div class="center col col-4 col-sm-12 row-sm-4">
+				<div class="group victory-cards"></div>
+				<div class="group treasure-cards"></div>
 			</div>
-			<div class="center col col-8">
-				<div class="kingdom-cards"></div>
-			</div>
+			<div class="center col col-8 col-sm-12 kingdom-cards row-sm-8"></div>
 		</div>
-		<div class="board" id="playerCards">
-			<div class="center col col-2 deck"></div>
-			<div class="center col col-8 hand"></div>
-			<div class="center col col-2 discard"></div>
+		<div class="row row-8" id="playerCards">
+			<div class="center col col-2 row-sm-6 deck"></div>
+			<div class="center col col-8 col-sm-10 hand"></div>
+			<div class="center col col-2 row-sm-6 discard"></div>
 		</div>
 	</section>
 </body>

@@ -7,12 +7,12 @@ div {
 	box-sizing: border-box;
 }
 
-.board {
-	padding: 10px;
+img {
+	background: #DDD;
+	box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.25);
 }
 
 .card {
-	box-sizing: border-box;
 	height: 220px;
 	width: 160px;
 }
@@ -40,12 +40,19 @@ div {
 	width: 66.66%;
 }
 
+.row {
+	padding: 0 15px;
+	width: 100%
+}
+
 #cardsInPlay {
 	height: 67%;
+	padding-top: 15px;
 }
 
 #playerCards {
 	height: 33%;
+	padding-bottom: 15px;
 }
 
 .deck .card, .discard .card {
@@ -55,14 +62,43 @@ div {
 
 @media screen and (max-width: 768px) {
 	.card {
-		height: 22vw;
-		width: 16vw;
+		height: 110px;
+		width: 80px;
 	}
-}
 
-@media screen and (max-width: 480px) {
-	.card {
-		height: 55vw;
-		width: 40vw;
+	.col {
+		float: none;
+	}
+
+	.col-sm-10 {
+		width: 83.33%;
+	}
+
+	.col-sm-12 {
+		width: 100%;
+	}
+
+	.group {
+		display: inline-block;
+	}
+
+	.deck, .discard {
+		float: left;
+	}
+
+	.hand {
+		float: right;
+	}
+
+	.row-sm-4 {
+		height: 33.33%;
+	}
+
+	.row-sm-6 {
+		height: 50%;
+	}
+
+	.row-sm-8 {
+		height: 66.66%;
 	}
 }

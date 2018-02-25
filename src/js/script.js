@@ -19,23 +19,6 @@ function init() {
 		this.func = func;
 	}
 
-	function shuffle(deck) {
-		let toShuffle = [];
-		let shuffled = [];
-
-		for (let card in deck) {
-			toShuffle.push([Math.random(), deck[card]]);
-		}
-
-		toShuffle.sort();
-
-		for (let i = 0; i < toShuffle.length; i++) {
-			shuffled.push(toShuffle[i][1]);
-		}
-
-		return shuffled;
-	}
-
 	const cards = {
 		kingdom_cards: {
 			adventurer:		new Card(10, 6, 0, 0, new Action(0, 0, 0)),
@@ -79,12 +62,42 @@ function init() {
 		}
 	};
 
+	for (let cardCategory in cards) {
+		for (let cardName in cards[cardCategory]) {
+			cards[cardCategory][cardName].name = cardName;
+		}
+	}
+
+	function shuffle(deck, num) {
+		let toShuffle = [];
+		let shuffled = {arr: [], obj: {}};
+
+		for (let cardName in deck) {
+			toShuffle.push([Math.random(), deck[cardName], cardName]);
+		}
+
+		toShuffle.sort();
+
+		num = num || toShuffle.length;
+
+		for (let i = 0; i < num; i++) {
+			shuffled.arr.push(toShuffle[i][1]);
+			shuffled.obj[toShuffle[i][2]] = toShuffle[i][1];
+		}
+
+		if (Array.isArray(deck)) {
+			return shuffled.arr;
+		}
+
+		return shuffled.obj;
+	}
+
+	// Assign cards to board and players
 	let cardsInPlay = {};
 	let numPlayers = 2;
 	let players = {};
-	let shuffledNames = shuffle(Object.keys(cards.kingdom_cards));
 
-	// Add treasure and victory cards
+	// Add treasure and victory cards to board
 	cardsInPlay.treasure_cards = cards.treasure_cards;
 	cardsInPlay.victory_cards = cards.victory_cards;
 	cardsInPlay.kingdom_cards = {};
@@ -93,13 +106,11 @@ function init() {
 		cardsInPlay.victory_cards[card].qty = 8 + 4 * (numPlayers > 2);
 	}
 
-	// Pick ten random kingdom cards
-	for (let i = 0; i < 10; i++) {
-		cardsInPlay.kingdom_cards[shuffledNames[i]] = cards.kingdom_cards[shuffledNames[i]];
-	}
+	// Pick ten random kingdom cards for gameplay
+	cardsInPlay.kingdom_cards = shuffle(cards.kingdom_cards, 10);
 
 	// Make player profiles and deal out starting decks
-	for (let i = 0; i < numPlayers; i++) {
+	for (let i = 1; i <= numPlayers; i++) {
 		players['player' + i] = {
 			cards: {
 				deck: [],
@@ -117,10 +128,8 @@ function init() {
 		for (let i = 0; i < 10; i++) {
 			if (i < 7) {
 				player.cards.deck.push(cards.treasure_cards.copper);
-				player.cards.deck[i].name = 'copper';
 			} else {
 				player.cards.deck.push(cards.victory_cards.estate);
-				player.cards.deck[i].name = 'estate';
 			}
 		}
 	}
@@ -128,28 +137,13 @@ function init() {
 	function printCards(cards, targetSelector) {
 		let target = document.querySelector(targetSelector);
 
-		for (let name in cards) {
-			let card = document.createElement('img');
+		for (let card in cards) {
+			let img = document.createElement('img');
 
-			card.className = 'card ' + name;
+			img.className = 'card ' + cards[card].name;
 
-			target.append(card);
+			target.append(img);
 		}
-	}
-
-	function getCard(cardCategory, cardName, player) {
-		let hasCard = false;
-
-		if (cardsInPlay[cardCategory][cardName] > 0) {
-			cardsInPlay[cardCategory][cardName].qty--;
-
-			player.cards.discard.push(cardsInPlay[cardCategory][cardName]);
-			player.cards.discard.name = cardName;
-			hasCard = true;
-		}
-
-		alert('There are no more cards in this stack');
-		return hasCard;
 	}
 
 	printCards(cardsInPlay.victory_cards, '#cardsInPlay .victory-cards');
@@ -157,5 +151,27 @@ function init() {
 	printCards(cardsInPlay.kingdom_cards, '#cardsInPlay .kingdom-cards');
 	printCards(players.player1.cards.deck, '#playerCards .deck');
 
-	test = players;
+	function drawCard(fromCardPile, toCardPile) {
+		if (Array.isArray(fromCardPile)) {
+			toCardPile.push(fromCardPile.pop());
+		}
+
+		else {
+			toCardPile.push(fromCardPile);
+			fromCardPile.qty--;
+		}
+	}
+
+	function getCard(cardCategory, cardName, player) {
+
+		if (cardsInPlay[cardCategory][cardName].qty > 0) {
+			drawCard(cardsInPlay[cardCategory][cardName], player.cards.discard);
+
+			return true;
+		}
+
+		alert('There are no more cards in this stack');
+	}
+
+	test = cards;
 }
