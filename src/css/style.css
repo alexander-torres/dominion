@@ -7,14 +7,14 @@ div {
 	box-sizing: border-box;
 }
 
-img {
-	background: #DDD;
-	box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.25);
-}
-
 .card {
+	background: #DDD;
+	border-radius: 10px;
+	box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.25);
+	display: inline-block;
 	height: 220px;
 	width: 160px;
+	white-space: nowrap;
 }
 
 .center {
@@ -45,23 +45,31 @@ img {
 	width: 100%
 }
 
+.row-4 {
+	height: 33.33%;
+}
+
+.row-8 {
+	height: 66.66%;
+}
+
 #cardsInPlay {
-	height: 67%;
 	padding-top: 15px;
 }
 
 #playerCards {
-	height: 33%;
 	padding-bottom: 15px;
 }
 
 .deck .card, .discard .card {
 	position: absolute;
-	transform: translateX(-50%);
+	top: 50%;
+	transform: translate(-50%, -50%);
 }
 
 @media screen and (max-width: 768px) {
 	.card {
+		border-radius: 5px;
 		height: 110px;
 		width: 80px;
 	}

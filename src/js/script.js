@@ -1,6 +1,6 @@
 window.onload = init;
 
-let test;
+let game;
 
 function init() {
 	function Card(qty, cost, value, victoryPoints, action, attack) {
@@ -68,6 +68,21 @@ function init() {
 		}
 	}
 
+	function addHandler(targetElement, event, func /*, arguments...*/) {
+		let params = [];
+
+		for (let i = 3; i < arguments.length; i++) {
+			params.push(arguments[i]);
+		}
+
+		targetElement.addEventListener(
+			event,
+			function() {
+				func.apply(null, params);
+			}
+		);
+	}
+
 	function shuffle(deck, num) {
 		let toShuffle = [];
 		let shuffled = {arr: [], obj: {}};
@@ -92,80 +107,55 @@ function init() {
 		return shuffled.obj;
 	}
 
-	// Assign cards to board and players
-	let cardsInPlay = {};
-	let numPlayers = 2;
-	let players = {};
-
-	// Add treasure and victory cards to board
-	cardsInPlay.treasure_cards = cards.treasure_cards;
-	cardsInPlay.victory_cards = cards.victory_cards;
-	cardsInPlay.kingdom_cards = {};
-
-	for (let card in cardsInPlay.victory_cards) {
-		cardsInPlay.victory_cards[card].qty = 8 + 4 * (numPlayers > 2);
-	}
-
-	// Pick ten random kingdom cards for gameplay
-	cardsInPlay.kingdom_cards = shuffle(cards.kingdom_cards, 10);
-
-	// Make player profiles and deal out starting decks
-	for (let i = 1; i <= numPlayers; i++) {
-		players['player' + i] = {
-			cards: {
-				deck: [],
-				discard: [],
-				hand: []
-			}
-		};
-
-		dealPlayerCards(players['player' + i]);
-
-		players['player' + i].cards.deck = shuffle(players['player' + i].cards.deck);
-	}
-
-	function dealPlayerCards(player) {
-		for (let i = 0; i < 10; i++) {
-			if (i < 7) {
-				player.cards.deck.push(cards.treasure_cards.copper);
-			} else {
-				player.cards.deck.push(cards.victory_cards.estate);
-			}
-		}
-	}
-
 	function printCards(cards, targetSelector) {
 		let target = document.querySelector(targetSelector);
 
 		for (let card in cards) {
 			let img = document.createElement('img');
 
-			img.className = 'card ' + cards[card].name;
+			img.alt = cards[card].name;
+			img.className = 'card';
+			img.name = cards[card].name;
+			img.src = `../images/${cards[card].name}`;
 
 			target.append(img);
 		}
 	}
 
-	printCards(cardsInPlay.victory_cards, '#cardsInPlay .victory-cards');
-	printCards(cardsInPlay.treasure_cards, '#cardsInPlay .treasure-cards');
-	printCards(cardsInPlay.kingdom_cards, '#cardsInPlay .kingdom-cards');
-	printCards(players.player1.cards.deck, '#playerCards .deck');
+	function eraseCards(targetSelector) {
+		targetSelector = targetSelector || '';
+		let cards = document.querySelectorAll(`${targetSelector} .card`);
 
-	function drawCard(fromCardPile, toCardPile) {
-		if (Array.isArray(fromCardPile)) {
-			toCardPile.push(fromCardPile.pop());
-		}
-
-		else {
-			toCardPile.push(fromCardPile);
-			fromCardPile.qty--;
+		for (let i = 0; i < cards.length; i++) {
+			cards[i].remove();
 		}
 	}
 
-	function getCard(cardCategory, cardName, player) {
+	function drawCards(fromCardPile, toCardPile, num) {
+		num = num || fromCardPile.length;
 
-		if (cardsInPlay[cardCategory][cardName].qty > 0) {
-			drawCard(cardsInPlay[cardCategory][cardName], player.cards.discard);
+		for (let i = 0; i < num; i++) {
+			if (Array.isArray(fromCardPile)) {
+				toCardPile.push(fromCardPile.pop());
+			}
+
+			else {
+				toCardPile.push(fromCardPile);
+				fromCardPile.qty--;
+			}
+		}
+	}
+
+	function dealPlayerCards(player) {
+		drawCards(cards.treasure_cards.copper, player.cards.deck, 7);
+		drawCards(cards.victory_cards.estate, player.cards.deck, 3);
+
+		player.cards.deck = shuffle(player.cards.deck);
+	}
+
+	function buyCard(cardCategory, cardName, player) {
+		if (game.cardsInPlay[cardCategory][cardName].qty > 0) {
+			drawCards(game.cardsInPlay[cardCategory][cardName], player.cards.discard, 1);
 
 			return true;
 		}
@@ -173,5 +163,66 @@ function init() {
 		alert('There are no more cards in this stack');
 	}
 
-	test = cards;
+	function addBuyListeners() {
+		let buyableCards = document.querySelectorAll('#cardsInPlay .card');
+
+		for (let i = 0; i < buyableCards.length; i++) {
+			let cardCategory = buyableCards[i].parentElement.id;
+			let cardName = buyableCards[i].name;
+			let player = this.activePlayer;
+
+			addHandler(buyableCards[i], 'click', buyCard, cardCategory, cardName, player);
+		}
+	}
+
+	function Game() {
+		let thisGame = this;
+		this.players = {};
+
+		this.addPlayers = function(num) {
+			for (let i = 1; i <= num; i++) {
+				thisGame.players['player' + i] = {
+					actions: 0,
+					cards: {
+						deck: [],
+						discard: [],
+						hand: []
+					},
+					treasure: 0,
+				};
+
+				dealPlayerCards(thisGame.players['player' + i]);
+			}
+		};
+
+		this.cardsInPlay = {
+			treasure_cards: cards.treasure_cards,
+			victory_cards: cards.victory_cards,
+			kingdom_cards: shuffle(cards.kingdom_cards, 10)
+		};
+
+		(this.startGame = function() {
+			let numPlayers = 2;
+
+			thisGame.addPlayers(numPlayers);
+			thisGame.activePlayer = thisGame.players.player1;
+
+			eraseCards();
+
+			for (let card in thisGame.cardsInPlay.victory_cards) {
+				thisGame.cardsInPlay.victory_cards[card].qty = 8 + 4 * (numPlayers > 2);
+			}
+
+			for (let cardCategory in thisGame.cardsInPlay) {
+				printCards(thisGame.cardsInPlay[cardCategory], `#${cardCategory}`);
+			}
+
+			addBuyListeners.call(thisGame);
+
+			printCards([{name: 'card_back'}], '#deck');
+		})();
+	}
+
+	game = new Game();
+
 }
