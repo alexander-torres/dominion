@@ -68,6 +68,7 @@ function init() {
 		}
 	}
 
+	// Utility functions
 	function addHandler(targetElement, event, func /*, arguments...*/) {
 		let params = [];
 
@@ -81,6 +82,36 @@ function init() {
 				func.apply(null, params);
 			}
 		);
+	}
+
+	function drawCards(fromCardPile, toCardPile, num) {
+		num = num || fromCardPile.length;
+
+		for (let i = 0; i < num; i++) {
+			if (Array.isArray(fromCardPile)) {
+				toCardPile.push(fromCardPile.pop());
+			}
+
+			else {
+				toCardPile.push(fromCardPile);
+				fromCardPile.qty--;
+			}
+		}
+	}
+
+	function printCards(cards, targetSelector) {
+		let target = document.querySelector(targetSelector);
+
+		for (let card in cards) {
+			let img = document.createElement('img');
+
+			img.alt = cards[card].name;
+			img.className = 'card';
+			img.name = cards[card].name;
+			img.src = `../images/${cards[card].name}.jpg`;
+
+			target.append(img);
+		}
 	}
 
 	function shuffle(deck, num) {
@@ -107,62 +138,7 @@ function init() {
 		return shuffled.obj;
 	}
 
-	function printCards(cards, targetSelector) {
-		let target = document.querySelector(targetSelector);
-
-		for (let card in cards) {
-			let img = document.createElement('img');
-
-			img.alt = cards[card].name;
-			img.className = 'card';
-			img.name = cards[card].name;
-			img.src = `../images/${cards[card].name}`;
-
-			target.append(img);
-		}
-	}
-
-	function eraseCards(targetSelector) {
-		targetSelector = targetSelector || '';
-		let cards = document.querySelectorAll(`${targetSelector} .card`);
-
-		for (let i = 0; i < cards.length; i++) {
-			cards[i].remove();
-		}
-	}
-
-	function drawCards(fromCardPile, toCardPile, num) {
-		num = num || fromCardPile.length;
-
-		for (let i = 0; i < num; i++) {
-			if (Array.isArray(fromCardPile)) {
-				toCardPile.push(fromCardPile.pop());
-			}
-
-			else {
-				toCardPile.push(fromCardPile);
-				fromCardPile.qty--;
-			}
-		}
-	}
-
-	function dealPlayerCards(player) {
-		drawCards(cards.treasure_cards.copper, player.cards.deck, 7);
-		drawCards(cards.victory_cards.estate, player.cards.deck, 3);
-
-		player.cards.deck = shuffle(player.cards.deck);
-	}
-
-	function buyCard(cardCategory, cardName, player) {
-		if (game.cardsInPlay[cardCategory][cardName].qty > 0) {
-			drawCards(game.cardsInPlay[cardCategory][cardName], player.cards.discard, 1);
-
-			return true;
-		}
-
-		alert('There are no more cards in this stack');
-	}
-
+	// General functions
 	function addBuyListeners() {
 		let buyableCards = document.querySelectorAll('#cardsInPlay .card');
 
@@ -175,9 +151,52 @@ function init() {
 		}
 	}
 
+	function buyCard(cardCategory, cardName, player) {
+		if (game.cardsInPlay[cardCategory][cardName].qty > 0) {
+			drawCards(game.cardsInPlay[cardCategory][cardName], player.cards.discard, 1);
+
+			return true;
+		}
+
+		alert('There are no more cards in this stack');
+	}
+
+	function dealPlayerCards(player) {
+		drawCards(cards.treasure_cards.copper, player.cards.deck, 7);
+		drawCards(cards.victory_cards.estate, player.cards.deck, 3);
+
+		player.cards.deck = shuffle(player.cards.deck);
+	}
+
+	function eraseCards(targetSelector) {
+		targetSelector = targetSelector || '';
+		let cards = document.querySelectorAll(`${targetSelector} .card`);
+
+		for (let i = 0; i < cards.length; i++) {
+			cards[i].remove();
+		}
+	}
+
+	function preventOverdraw(player) {
+		if (player.cards.deck.length < 5) {
+			player.cards.discard = shuffle(player.cards.discard);
+
+			drawCards(player.cards.discard, player.cards.deck);
+
+			eraseCards('#deck');
+		}
+	}
+
 	function Game() {
 		let thisGame = this;
+		this.cardsInPlay = {
+			kingdom_cards: shuffle(cards.kingdom_cards, 10),
+			treasure_cards: cards.treasure_cards,
+			victory_cards: cards.victory_cards
+		};
+		this.numPlayers = 2;
 		this.players = {};
+		this.turn = 0;
 
 		this.addPlayers = function(num) {
 			for (let i = 1; i <= num; i++) {
@@ -188,29 +207,32 @@ function init() {
 						discard: [],
 						hand: []
 					},
-					treasure: 0,
+					treasure: 0
 				};
 
 				dealPlayerCards(thisGame.players['player' + i]);
 			}
 		};
 
-		this.cardsInPlay = {
-			treasure_cards: cards.treasure_cards,
-			victory_cards: cards.victory_cards,
-			kingdom_cards: shuffle(cards.kingdom_cards, 10)
+		this.playerTurn = function() {
+			thisGame.turn = thisGame.turn++ % thisGame.numPlayers + 1;
+
+			thisGame.activePlayer = thisGame.players[`player${thisGame.turn}`];
+
+			preventOverdraw(thisGame.activePlayer);
+
+			drawCards(thisGame.activePlayer.cards.deck, thisGame.activePlayer.cards.hand, 5);
+
+			printCards(thisGame.activePlayer.cards.hand, '#hand');
 		};
 
 		(this.startGame = function() {
-			let numPlayers = 2;
-
-			thisGame.addPlayers(numPlayers);
-			thisGame.activePlayer = thisGame.players.player1;
+			thisGame.addPlayers(thisGame.numPlayers);
 
 			eraseCards();
 
 			for (let card in thisGame.cardsInPlay.victory_cards) {
-				thisGame.cardsInPlay.victory_cards[card].qty = 8 + 4 * (numPlayers > 2);
+				thisGame.cardsInPlay.victory_cards[card].qty = 8 + 4 * (thisGame.numPlayers > 2);
 			}
 
 			for (let cardCategory in thisGame.cardsInPlay) {
@@ -220,9 +242,10 @@ function init() {
 			addBuyListeners.call(thisGame);
 
 			printCards([{name: 'card_back'}], '#deck');
+
+			thisGame.playerTurn();
 		})();
 	}
 
 	game = new Game();
-
 }

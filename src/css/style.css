@@ -8,13 +8,13 @@ div {
 }
 
 .card {
-	background: #DDD;
+	/*background: #DDD;*/
 	border-radius: 10px;
 	box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.25);
 	display: inline-block;
 	height: 220px;
-	width: 160px;
 	white-space: nowrap;
+	width: 160px;
 }
 
 .center {
@@ -22,9 +22,11 @@ div {
 }
 
 .col {
+	display: inline-block;
 	float: left;
 	height: 100%;
 	overflow-y: auto;
+	overflow-x: hidden;
 	position: relative;
 }
 
@@ -42,7 +44,7 @@ div {
 
 .row {
 	padding: 0 15px;
-	width: 100%
+	width: 100%;
 }
 
 .row-4 {
@@ -61,7 +63,7 @@ div {
 	padding-bottom: 15px;
 }
 
-.deck .card, .discard .card {
+#deck .card, #discard .card {
 	position: absolute;
 	top: 50%;
 	transform: translate(-50%, -50%);
@@ -90,11 +92,11 @@ div {
 		display: inline-block;
 	}
 
-	.deck, .discard {
+	#deck, #discard {
 		float: left;
 	}
 
-	.hand {
+	#hand {
 		float: right;
 	}
 
