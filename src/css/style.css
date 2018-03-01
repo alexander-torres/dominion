@@ -1,4 +1,4 @@
-body, html, #content {
+body, html, #board {
 	height: 100%;
 	margin: 0;
 }
@@ -8,13 +8,13 @@ div {
 }
 
 .card {
-	/*background: #DDD;*/
 	border-radius: 10px;
 	box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.25);
 	display: inline-block;
-	height: 220px;
-	white-space: nowrap;
-	width: 160px;
+	height: 210px;
+	vertical-align: top;
+	width: 150px;
+	word-wrap: break-word;
 }
 
 .center {
@@ -22,11 +22,11 @@ div {
 }
 
 .col {
+	border: 1px solid #000;
 	display: inline-block;
 	float: left;
 	height: 100%;
 	overflow-y: auto;
-	overflow-x: hidden;
 	position: relative;
 }
 
@@ -72,12 +72,12 @@ div {
 @media screen and (max-width: 768px) {
 	.card {
 		border-radius: 5px;
-		height: 110px;
-		width: 80px;
+		height: 105px;
+		width: 75px;
 	}
 
 	.col {
-		float: none;
+		overflow-y: unset;
 	}
 
 	.col-sm-10 {
@@ -98,6 +98,14 @@ div {
 
 	#hand {
 		float: right;
+	}
+
+	.row {
+		overflow-y: auto;
+	}
+
+	.row-sm-fit {
+		height: fit-content;
 	}
 
 	.row-sm-4 {
