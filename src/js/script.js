@@ -72,9 +72,9 @@ function init() {
 
 	const cards = new Cards();
 
-	for (let cardCategory in cards) {
-		for (let cardName in cards[cardCategory]) {
-			cards[cardCategory][cardName].name = cardName;
+	for (let category in cards) {
+		for (let cardName in cards[category]) {
+			cards[category][cardName].name = cardName;
 		}
 	}
 
@@ -119,6 +119,14 @@ function init() {
 			img.src = `../images/${cardsInPlay[card].name}.jpg`;
 
 			target.append(img);
+		}
+	}
+
+	function removeListeners(targetElement, event) {
+		let eventListeners = getEventListeners(targetElement)[event];
+
+		for (let i = 0; i < eventListeners.length; i++) {
+			targetElement.removeEventListener(eventListeners[i]);
 		}
 	}
 
@@ -178,7 +186,6 @@ function init() {
 			value: 0,
 			qty: 0
 		};
-		this.listeners = [];
 		this.turnPhase = 'buy';
 		this.treasure = 0;
 
@@ -186,10 +193,10 @@ function init() {
 			let gainableCards = document.querySelectorAll('#cardsInPlay .card');
 
 			for (let i = 0; i < gainableCards.length; i++) {
-				let cardCategory = gainableCards[i].parentElement.id;
-				let cardName = gainableCards[i].name;
+				let category = gainableCards[i].parentElement.id;
+				let name = gainableCards[i].name;
 
-				thisPlayer.listeners.push(addHandler(gainableCards[i], 'click', thisPlayer.gainCard, cards[cardCategory][cardName]));
+				addHandler(gainableCards[i], 'click', thisPlayer.gainCard, cards[category][name])
 			}
 		};
 
@@ -222,7 +229,7 @@ function init() {
 
 				drawCards(thisPlayer.cards.discard, thisPlayer.cards.deck);
 
-				eraseCards('#deck');
+				eraseCards('#discard');
 			}
 		};
 
@@ -281,8 +288,8 @@ function init() {
 				cards.victory_cards[card].qty = 8 + 4 * (thisGame.numPlayers > 2);
 			}
 
-			for (let cardCategory in thisGame.cardsInPlay) {
-				printCards(cards[cardCategory], `#${cardCategory}`);
+			for (let category in thisGame.cardsInPlay) {
+				printCards(cards[category], `#${category}`);
 			}
 
 			printCards([{name: 'card_back'}], '#deck');
