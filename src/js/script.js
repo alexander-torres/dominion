@@ -20,8 +20,8 @@ function init() {
 	}
 
 	function Cards() {
-		let theseCards = this;
-		this.kingdom_cards = {
+		let allCards = {
+		 kingdom_cards: {
 			adventurer:		new Card(10, 6, 0, 0, new Action(0, 0, 0)),
 			bureaucrat:		new Card(10, 4, 0, 0, new Action(0, 0, 0)),
 			cellar: 		new Card(10, 2, 0, 0, new Action(1, 0, 0)),
@@ -47,36 +47,39 @@ function init() {
 			witch:			new Card(10, 5, 0, 0, new Action(0, 0, 2)),
 			woodcutter:		new Card(10, 3, 2, 0, new Action(0, 1, 0)),
 			workshop:		new Card(10, 3, 0, 0, new Action(0, 0, 0))
-		};
-
-		this.penalty_cards = {
+		},
+		 penalty_cards: {
 			curse:			new Card(30, 0, 0, -1)
-		};
-
-		this.treasure_cards = {
+		},
+		 treasure_cards: {
 			copper:			new Card(60, 0, 1, 0),
 			gold:			new Card(30, 6, 3, 0),
 			silver:			new Card(40, 3, 2, 0)
-		};
-
-		this.victory_cards = {
+		},
+		 victory_cards: {
 			duchy:			new Card(12, 5, 0, 3),
 			estate:			new Card(24, 2, 0, 1),
 			province:		new Card(12, 8, 0, 6)
-		};
-
-		(this.initCards = function() {
-			theseCards.kingdom_cards = shuffle(theseCards.kingdom_cards, 10);
-		})();
-	}
-
-	const cards = new Cards();
-
-	for (let category in cards) {
-		for (let cardName in cards[category]) {
-			cards[category][cardName].name = cardName;
 		}
 	}
+
+		function initCards() {
+			allCards.kingdom_cards = shuffle(allCards.kingdom_cards, 10);
+
+			for (let category in allCards) {
+				for (let cardName in allCards[category]) {
+					allCards[category][cardName].name = cardName;
+					allCards[category][cardName].category = category;
+				}
+			}
+
+			return allCards;
+		}
+
+		return initCards();
+	}
+
+	const cards = Cards();
 
 	// DOM manipulation functions
 	function addHandler(targetElement, event, func /*, arguments...*/) {
@@ -95,7 +98,7 @@ function init() {
 			handler
 		);
 
-		return handler;
+		return {element: targetElement, func: handler};
 	}
 
 	function eraseCards(targetSelector) {
@@ -122,15 +125,18 @@ function init() {
 		}
 	}
 
-	function removeListeners(targetElement, event) {
-		let eventListeners = getEventListeners(targetElement)[event];
+	// Data manipulation functions
+	function checkCardCategory(cards, category) {
+		let cardArray = (Array.isArray(cards) && cards) || [cards];
+		let result = false;
 
-		for (let i = 0; i < eventListeners.length; i++) {
-			targetElement.removeEventListener(eventListeners[i]);
+		for (let i = 0; i < cardArray.length; i++) {
+			result = result || cardArray[i].category == category;
 		}
+
+		return result;
 	}
 
-	// Data manipulation functions
 	function drawCards(fromCardPile, toCardPile, num) {
 		num = num || fromCardPile.length;
 
@@ -183,10 +189,11 @@ function init() {
 			hand: []
 		};
 		this.gain = {
-			value: 0,
-			qty: 0
+			qty: 0,
+			value: 0
 		};
-		this.turnPhase = 'buy';
+		this.listeners = [];
+		this.turnPhase = 'action';
 		this.treasure = 0;
 
 		this.addListeners = function() {
@@ -196,15 +203,61 @@ function init() {
 				let category = gainableCards[i].parentElement.id;
 				let name = gainableCards[i].name;
 
-				addHandler(gainableCards[i], 'click', thisPlayer.gainCard, cards[category][name])
+				thisPlayer.listeners.push(
+					addHandler(gainableCards[i], 'click', thisPlayer.gainCard, cards[category][name])
+				);
 			}
+		};
+
+		this.checkDeck = function() {
+			if (thisPlayer.cards.deck.length < 5) {
+				thisPlayer.cards.discard = shuffle(thisPlayer.cards.discard);
+
+				drawCards(thisPlayer.cards.discard, thisPlayer.cards.deck);
+
+				eraseCards('#discard');
+			}
+		};
+
+		this.checkStatus = function() {
+			let hasKingdomCards = checkCardCategory(thisPlayer.cards.hand, 'kingdom_cards');
+			let hasTreasureCards = checkCardCategory(thisPlayer.cards.hand, 'treasure_cards');
+			let turnFinished = false;
+
+			let canPlayAction = thisPlayer.turnPhase === 'action' && thisPlayer.actions > 0 && hasKingdomCards;
+
+			if (!canPlayAction) {
+				thisPlayer.turnPhase = 'buy';
+			}
+
+			let canBuy = thisPlayer.turnPhase === 'buy' && thisPlayer.buys > 0 && hasTreasureCards;
+
+			if (!canBuy) {
+				turnFinished = true;
+			}
+
+			return turnFinished;
+		};
+
+		this.endTurn = function() {
+			thisPlayer.turnPhase = 'action';
+
+			for (let i = 0; i < thisPlayer.listeners.length; i++) {
+				thisPlayer.listeners[i].element.removeEventListener('click', thisPlayer.listeners[i].func);
+			}
+
+			drawCards(thisPlayer.cards.hand, thisPlayer.cards.discard);
+
+			eraseCards('#hand');
+			printCards([{name: 'card_back'}], '#discard');
 		};
 
 		this.gainCard = function(cardPile) {
 			let canAffordBuy = thisPlayer.buys > 0 && thisPlayer.treasure >= cardPile.cost;
 			let canAffordGain = thisPlayer.gain.qty > 0 && thisPlayer.gain.value >= cardPile.cost;
 			let inBuyPhase = thisPlayer.turnPhase === 'buy';
-			console.log('clicked!');
+			let message = 'There are no more cards in this stack';
+
 			let canBuy = inBuyPhase && canAffordBuy;
 			let canGain = !inBuyPhase && canAffordGain;
 
@@ -216,21 +269,16 @@ function init() {
 					thisPlayer.gain.qty -= !inBuyPhase;
 
 					thisPlayer.treasure -= inBuyPhase * cardPile.cost;
+				} else {
+					message = inBuyPhase && `YOU HAVE\nBuys: ${thisPlayer.buys}\nTreasure: ${thisPlayer.treasure}`;
+					message = message || 'You cannot gain a card';
+
+					alert(message);
 				}
 				return;
 			}
 
-			alert('There are no more cards in this stack');
-		};
-
-		this.checkDeck = function() {
-			if (thisPlayer.cards.deck.length < 5) {
-				thisPlayer.cards.discard = shuffle(thisPlayer.cards.discard);
-
-				drawCards(thisPlayer.cards.discard, thisPlayer.cards.deck);
-
-				eraseCards('#discard');
-			}
+			alert(message);
 		};
 
 		(this.initPlayer = function() {
@@ -256,13 +304,22 @@ function init() {
 	function Game() {
 		let thisGame = this;
 		this.cardsInPlay = {
-			kingdom_cards: shuffle(cards.kingdom_cards, 10),
+			kingdom_cards: cards.kingdom_cards,
 			treasure_cards: cards.treasure_cards,
 			victory_cards: cards.victory_cards
 		};
-		this.numPlayers = 2;
+		this.listeners = [];
+		this.numPlayers = 1;
 		this.players = {};
-		this.turn = 0;
+		this.turn = 1;
+
+		this.checkPlayerStatus = function() {
+			let turnFinished = thisGame.activePlayer.checkStatus();
+
+			if (turnFinished) {
+				thisGame.nextPlayer();
+			}
+		};
 
 		this.initPlayers = function(num) {
 			for (let i = 1; i <= num; i++) {
@@ -272,10 +329,26 @@ function init() {
 			thisGame.activePlayer = thisGame.players.player1;
 		};
 
-		this.startPlayerTurn = function() {
-			thisGame.turn = thisGame.turn++ % thisGame.numPlayers + 1;
+		this.nextPlayer = function() {
+			for (let i = 0; i < thisGame.listeners.length; i++) {
+				document.removeEventListener('click', thisGame.listeners[i].func);
+			}
 
-			thisGame.players[`player${thisGame.turn}`].initTurn();
+			thisGame.activePlayer.endTurn();
+
+			thisGame.turn++;
+
+			thisGame.startPlayerTurn();
+		};
+
+		this.startPlayerTurn = function() {
+			thisGame.activePlayer = thisGame.players[`player${thisGame.turn % thisGame.numPlayers + 1}`];
+
+			thisGame.activePlayer.initTurn();
+
+			thisGame.checkPlayerStatus();
+
+			thisGame.listeners.push(addHandler(document, 'click', thisGame.checkPlayerStatus));
 		};
 
 		(this.initGame = function() {
