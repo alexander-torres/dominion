@@ -5,16 +5,28 @@ let game;
 function init() {
 	function Action(obj) {
 		return function() {
+			let isActionCard = this.getAttribute('category') === 'kingdom_cards';
 			let player = game.activePlayer;
 
-			player.actions += obj.actions || 0;
-			player.buys += obj.buys || 0;
-			player.gain.qty += obj.gain.qty || 0;
-			player.gain.value = obj.gain.value || 0;
-			player.gain.type = obj.gain.type || '';
-			player.treasure += obj.treasure || 0;
+			if (player.actions > 0) {
+				player.actions += (obj.actions || 0) - isActionCard;
+				player.buys += obj.buys || 0;
+				player.treasure += obj.treasure || 0;
 
-			drawCards(player.cards.deck, player.cards.hand, obj.cards || 0);
+				if (obj.gain) {
+					player.gain.qty += obj.gain.qty || 0;
+					player.gain.value = obj.gain.value || 0;
+					player.gain.type = obj.gain.type || '';
+				}
+
+				for(let i = 0; i < obj.drawNum; i++) {
+					player.checkDeck();
+
+					printCards([player.cards.deck[0]], '#hand');
+
+					drawCards(player.cards.deck, player.cards.hand, 1);
+				}
+			}
 		}
 	}
 
@@ -26,39 +38,39 @@ function init() {
 				cellar: 		{qty: 10, cost: 2, action: new Action({actions: 1})},
 				chancellor: 	{qty: 10, cost: 3, action: new Action({treasure: 2})},
 				chapel: 		{qty: 10, cost: 2, action: new Action({})},
-				council_room: 	{qty: 10, cost: 5, action: new Action({buys: 1, cards: 4})},
+				council_room: 	{qty: 10, cost: 5, action: new Action({buys: 1, drawNum: 4})},
 				feast:			{qty: 10, cost: 4, action: new Action({gain: {qty: 1, value: 5}})},
 				festival: 		{qty: 10, cost: 5, action: new Action({actions: 2, buys: 1, treasure: 2})},
 				gardens: 		{qty: 10, cost: 4, action: new Action({})},
-				laboratory: 	{qty: 10, cost: 5, action: new Action({actions: 1, cards: 2})},
+				laboratory: 	{qty: 10, cost: 5, action: new Action({actions: 1, drawNum: 2})},
 				library: 		{qty: 10, cost: 5, action: new Action({})},
-				market: 		{qty: 10, cost: 5, action: new Action({actions: 1, buys: 1, cards: 1, treasure: 1})},
+				market: 		{qty: 10, cost: 5, action: new Action({actions: 1, buys: 1, drawNum: 1, treasure: 1})},
 				militia: 		{qty: 10, cost: 4, action: new Action({treasure: 2})},
 				mine:			{qty: 10, cost: 5, action: new Action({})},
-				moat:			{qty: 10, cost: 2, action: new Action({cards: 2})},
+				moat:			{qty: 10, cost: 2, action: new Action({drawNum: 2})},
 				moneylender: 	{qty: 10, cost: 4, action: new Action({})},
 				remodel: 		{qty: 10, cost: 4, action: new Action({})},
-				smithy: 		{qty: 10, cost: 4, action: new Action({cards: 3})},
-				spy:			{qty: 10, cost: 4, action: new Action({actions: 1, cards: 1})},
+				smithy: 		{qty: 10, cost: 4, action: new Action({drawNum: 3})},
+				spy:			{qty: 10, cost: 4, action: new Action({actions: 1, drawNum: 1})},
 				thief:			{qty: 10, cost: 4, action: new Action({})},
 				throne_room: 	{qty: 10, cost: 4, action: new Action({})},
-				village: 		{qty: 10, cost: 3, action: new Action({actions: 2, cards: 1})},
-				witch:			{qty: 10, cost: 5, action: new Action({cards: 2})},
+				village: 		{qty: 10, cost: 3, action: new Action({actions: 2, drawNum: 1})},
+				witch:			{qty: 10, cost: 5, action: new Action({drawNum: 2})},
 				woodcutter:		{qty: 10, cost: 3, action: new Action({buys: 1, treasure: 2})},
 				workshop:		{qty: 10, cost: 3, action: new Action({gain: {qty: 1, value: 4}})}
 			},
 			penalty_cards: {
-				curse:			{qty: 30, victoryPoints: -1, action: function(){console.log('curse');}}
+				curse:			{qty: 30, victoryPoints: -1, action: new Action({})}
 			},
 			treasure_cards: {
-				copper:			{qty: 60, cost: 0, value: 1, action: function(){console.log('copper');}},
-				gold:			{qty: 30, cost: 6, value: 3, action: function(){console.log('gold');}},
-				silver:			{qty: 40, cost: 3, value: 2, action: function(){console.log('silver');}}
+				copper:			{qty: 60, cost: 0, value: 1, action: new Action({})},
+				gold:			{qty: 30, cost: 6, value: 3, action: new Action({})},
+				silver:			{qty: 40, cost: 3, value: 2, action: new Action({})}
 			},
 			victory_cards: {
-				duchy:			{qty: 12, cost: 5, victoryPoints: 3, action: function(){console.log('duchy');}},
-				estate:			{qty: 24, cost: 2, victoryPoints: 1, action: function(){console.log('estate');}},
-				province:		{qty: 12, cost: 8, victoryPoints: 6, action: function(){console.log('province');}}
+				duchy:			{qty: 12, cost: 5, victoryPoints: 3, action: new Action({})},
+				estate:			{qty: 24, cost: 2, victoryPoints: 1, action: new Action({})},
+				province:		{qty: 12, cost: 8, victoryPoints: 6, action: new Action({})}
 			}
 	};
 
@@ -89,7 +101,7 @@ function init() {
 		}
 
 		function handler() {
-			func.apply(null, params);
+			func.apply(targetElement, params);
 		};
 
 		targetElement.addEventListener(
@@ -209,35 +221,22 @@ function init() {
 
 	function Player() {
 		let thisPlayer = this;
+
 		this.actions = 0;
 		this.buys = 0;
 		this.cards = {
 			deck: [],
 			discard: [],
 			hand: [],
-			play: []
+			played: []
 		};
 		this.gain = {
 			qty: 0,
 			type: '',
 			value: 0
 		};
-		this.listeners = [];
 		this.turnPhase = 'action';
 		this.treasure = 0;
-
-		this.addListeners = function() {
-			let gainableCards = document.querySelectorAll('#cardsInPlay .card');
-
-			for (let i = 0; i < gainableCards.length; i++) {
-				let category = gainableCards[i].parentElement.id;
-				let name = gainableCards[i].name;
-
-				thisPlayer.listeners.push(
-					addHandler(gainableCards[i], 'click', thisPlayer.gainCard, cards[category][name])
-				);
-			}
-		};
 
 		this.checkDeck = function() {
 			if (thisPlayer.cards.deck.length < 5) {
@@ -280,12 +279,6 @@ function init() {
 			thisPlayer.gain.qty = 0;
 			thisPlayer.gain.type = '';
 			thisPlayer.gain.value = 0;
-
-			for (let i = 0; i < thisPlayer.listeners.length; i++) {
-				thisPlayer.listeners[i].element.removeEventListener('click', thisPlayer.listeners[i].func);
-			}
-
-			thisPlayer.listeners = [];
 
 			drawCards(thisPlayer.cards.hand, thisPlayer.cards.discard);
 
@@ -343,8 +336,6 @@ function init() {
 			console.log(text);
 
 			printCards(thisPlayer.cards.hand, '#hand');
-
-			thisPlayer.addListeners();
 		};
 
 		this.sumTreasure = function() {
@@ -354,23 +345,35 @@ function init() {
 				thisPlayer.treasure += isTreasure && thisPlayer.cards.hand[i].value;
 			}
 
-			for (let i = 0; i < thisPlayer.cards.play.length; i++) {
-				thisPlayer.treasure += thisPlayer.cards.play[i].value;
+			for (let i = 0; i < thisPlayer.cards.played.length; i++) {
+				thisPlayer.treasure += thisPlayer.cards.played[i].value;
 			}
 		};
 	}
 
 	function Game() {
 		let thisGame = this;
+
+		this.activePlayer = {};
 		this.cardsInPlay = {
 			kingdom_cards: cards.kingdom_cards,
 			treasure_cards: cards.treasure_cards,
 			victory_cards: cards.victory_cards
 		};
-		this.listeners = [];
 		this.numPlayers = 1;
 		this.players = {};
 		this.turn = 0;
+
+		this.addListeners = function() {
+			let gainableCards = document.querySelectorAll('#cardsInPlay .card');
+
+			for (let i = 0; i < gainableCards.length; i++) {
+				let category = gainableCards[i].parentElement.id;
+				let name = gainableCards[i].name;
+
+				addHandler(gainableCards[i], 'click', thisGame.activePlayer.gainCard, cards[category][name]);
+			}
+		};
 
 		this.checkPlayerStatus = function() {
 			let turnFinished = thisGame.activePlayer.checkStatus();
@@ -389,10 +392,6 @@ function init() {
 		};
 
 		this.nextPlayer = function() {
-			for (let i = 0; i < thisGame.listeners.length; i++) {
-				document.removeEventListener('click', thisGame.listeners[i].func);
-			}
-
 			thisGame.activePlayer.endTurn();
 
 			thisGame.turn++;
@@ -420,12 +419,16 @@ function init() {
 				cards.victory_cards[card].qty = 8 + 4 * (thisGame.numPlayers > 2);
 			}
 
+			// Print cards to board
 			for (let category in thisGame.cardsInPlay) {
 				printCards(cards[category], `#${category}`, 'cost');
 			}
 
+			thisGame.addListeners();
+
 			printCards([{name: 'card_back'}], '#deck');
 
+			// Begin gameplay
 			thisGame.startPlayerTurn();
 		})();
 	}
