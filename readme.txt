@@ -26,3 +26,20 @@ Player Turn:
 
 	End turn:
 	-	player discards their hand
+
+
+	Action Phase:
+	-	deal out cards
+	-	add click listeners to kingdom cards with card action placed in
+		handler
+	-	check for kingdom cards and number of actions left in play
+	{LOOP}
+	-	player clicks kingdom card and fires handler:
+		+	replace 'hand' class with 'played' for kingdom card element in DOM
+		+	remove listener from kingdom card element in DOM
+		+	check for kingdom cards and number of actions left in play
+	{/LOOP}
+	-	No actions are available, player has run out of kingdom cards,
+		or player skips to buy phase
+		+	remove listeners from the rest of the kingdom card elements
+		+	change turn phase to 'buy'

@@ -3,65 +3,62 @@ window.onload = init;
 let game;
 
 function init() {
-	function Card(qty, cost, value, victoryPoints, action, attack) {
-		this.qty = qty;
-		this.cost = cost;
-		this.value = value;
-		this.victoryPoints = victoryPoints;
-		this.action = action;
-		this.attack = attack;
-	}
+	function Action(obj) {
+		return function(player) {
+			player.actions += obj.actions || 0;
+			player.buys += obj.buys || 0;
+			player.gain.qty += obj.gain.qty || 0;
+			player.gain.value = obj.gain.value || 0;
+			player.gain.type = obj.gain.type || '';
+			player.treasure += obj.treasure || 0;
 
-	function Action(plusAction, plusBuy, plusCard, func) {
-		this.plusAction = plusAction;
-		this.plusBuy = plusBuy;
-		this.plusCard = plusCard;
-		this.func = func;
+			drawCards(player.cards.deck, player.cards.hand, obj.cards || 0);
+		}
 	}
 
 	function Cards() {
 		let allCards = {
-		 kingdom_cards: {
-			adventurer:		new Card(10, 6, 0, 0, new Action(0, 0, 0)),
-			bureaucrat:		new Card(10, 4, 0, 0, new Action(0, 0, 0)),
-			cellar: 		new Card(10, 2, 0, 0, new Action(1, 0, 0)),
-			chancellor: 	new Card(10, 3, 2, 0, new Action(0, 0, 0)),
-			chapel: 		new Card(10, 2, 0, 0, new Action(0, 0, 0)),
-			council_room: 	new Card(10, 5, 0, 0, new Action(0, 1, 4)),
-			feast:			new Card(10, 4, 0, 0, new Action(0, 0, 0)),
-			festival: 		new Card(10, 5, 2, 0, new Action(2, 1, 0)),
-			gardens: 		new Card(10, 4, 0, 0, new Action(0, 0, 0)),
-			laboratory: 	new Card(10, 5, 0, 0, new Action(1, 0, 2)),
-			library: 		new Card(10, 5, 0, 0, new Action(0, 0, 0)),
-			market: 		new Card(10, 5, 1, 0, new Action(1, 1, 1)),
-			militia: 		new Card(10, 4, 2, 0, new Action(0, 0, 0)),
-			mine:			new Card(10, 5, 0, 0, new Action(0, 0, 0)),
-			moat:			new Card(10, 0, 0, 0, new Action(0, 0, 2)),
-			moneylender: 	new Card(10, 4, 0, 0, new Action(0, 0, 0)),
-			remodel: 		new Card(10, 4, 0, 0, new Action(0, 0, 0)),
-			smithy: 		new Card(10, 4, 0, 0, new Action(0, 0, 3)),
-			spy:			new Card(10, 4, 0, 0, new Action(1, 0, 1)),
-			thief:			new Card(10, 4, 0, 0, new Action(0, 0, 0)),
-			throne_room: 	new Card(10, 4, 0, 0, new Action(0, 0, 0)),
-			village: 		new Card(10, 3, 0, 0, new Action(2, 0, 1)),
-			witch:			new Card(10, 5, 0, 0, new Action(0, 0, 2)),
-			woodcutter:		new Card(10, 3, 2, 0, new Action(0, 1, 0)),
-			workshop:		new Card(10, 3, 0, 0, new Action(0, 0, 0))
-		},
-		 penalty_cards: {
-			curse:			new Card(30, 0, 0, -1)
-		},
-		 treasure_cards: {
-			copper:			new Card(60, 0, 1, 0),
-			gold:			new Card(30, 6, 3, 0),
-			silver:			new Card(40, 3, 2, 0)
-		},
-		 victory_cards: {
-			duchy:			new Card(12, 5, 0, 3),
-			estate:			new Card(24, 2, 0, 1),
-			province:		new Card(12, 8, 0, 6)
-		}
-	}
+			kingdom_cards: {
+				adventurer:		{qty: 10, cost: 6, action: new Action({})},
+				bureaucrat:		{qty: 10, cost: 4, action: new Action({gain: {qty: 1, type: 'silver'}})},
+				cellar: 		{qty: 10, cost: 2, action: new Action({actions: 1})},
+				chancellor: 	{qty: 10, cost: 3, action: new Action({treasure: 2})},
+				chapel: 		{qty: 10, cost: 2, action: new Action({})},
+				council_room: 	{qty: 10, cost: 5, action: new Action({buys: 1, cards: 4})},
+				feast:			{qty: 10, cost: 4, action: new Action({gain: {qty: 1, value: 5}})},
+				festival: 		{qty: 10, cost: 5, action: new Action({actions: 2, buys: 1, treasure: 2})},
+				gardens: 		{qty: 10, cost: 4, action: new Action({})},
+				laboratory: 	{qty: 10, cost: 5, action: new Action({actions: 1, cards: 2})},
+				library: 		{qty: 10, cost: 5, action: new Action({})},
+				market: 		{qty: 10, cost: 5, action: new Action({actions: 1, buys: 1, cards: 1, treasure: 1})},
+				militia: 		{qty: 10, cost: 4, action: new Action({treasure: 2})},
+				mine:			{qty: 10, cost: 5, action: new Action({})},
+				moat:			{qty: 10, cost: 2, action: new Action({cards: 2})},
+				moneylender: 	{qty: 10, cost: 4, action: new Action({})},
+				remodel: 		{qty: 10, cost: 4, action: new Action({})},
+				smithy: 		{qty: 10, cost: 4, action: new Action({cards: 3})},
+				spy:			{qty: 10, cost: 4, action: new Action({actions: 1, cards: 1})},
+				thief:			{qty: 10, cost: 4, action: new Action({})},
+				throne_room: 	{qty: 10, cost: 4, action: new Action({})},
+				village: 		{qty: 10, cost: 3, action: new Action({actions: 2, cards: 1})},
+				witch:			{qty: 10, cost: 5, action: new Action({cards: 2})},
+				woodcutter:		{qty: 10, cost: 3, action: new Action({buys: 1, treasure: 2})},
+				workshop:		{qty: 10, cost: 3, action: new Action({gain: {qty: 1, value: 4}})}
+			},
+			penalty_cards: {
+				curse:			{qty: 30, victoryPoints: -1}
+			},
+			treasure_cards: {
+				copper:			{qty: 60, cost: 0, value: 1},
+				gold:			{qty: 30, cost: 6, value: 3},
+				silver:			{qty: 40, cost: 3, value: 2}
+			},
+			victory_cards: {
+				duchy:			{qty: 12, cost: 5, victoryPoints: 3},
+				estate:			{qty: 24, cost: 2, victoryPoints: 1},
+				province:		{qty: 12, cost: 8, victoryPoints: 6}
+			}
+	};
 
 		function initCards() {
 			allCards.kingdom_cards = shuffle(allCards.kingdom_cards, 10);
@@ -110,16 +107,20 @@ function init() {
 		}
 	}
 
-	function printCards(cardsInPlay, targetSelector) {
+	function printCards(cardsInPlay, targetSelector, sortKey) {
 		let target = document.querySelector(targetSelector);
+
+		if (sortKey) {
+			cardsInPlay = sortByKey(cardsInPlay, sortKey);
+		}
 
 		for (let card in cardsInPlay) {
 			let img = document.createElement('img');
 
-			img.alt = cardsInPlay[card].name;
+			img.alt = `${cardsInPlay[card].name} Cost: ${cardsInPlay[card].cost}`;
 			img.className = 'card';
 			img.name = cardsInPlay[card].name;
-			img.src = `../images/${cardsInPlay[card].name}.jpg`;
+			img.src = `images/${cardsInPlay[card].name}.jpg`;
 
 			target.append(img);
 		}
@@ -131,7 +132,7 @@ function init() {
 		let result = false;
 
 		for (let i = 0; i < cardArray.length; i++) {
-			result = result || cardArray[i].category == category;
+			result = result || cardArray[i].category === category;
 		}
 
 		return result;
@@ -179,6 +180,26 @@ function init() {
 		return shuffled.obj;
 	}
 
+	function sortByKey(arr, key) {
+		arr = Object.values(arr);
+
+		arr.sort(
+			function(a, b) {
+				let test = 0;
+
+				if (a[key] < b[key]) {
+					test = 1;
+				} else if (a[key] > b[key]){
+					test = -1;
+				}
+
+				return test;
+			}
+		);
+
+		return arr;
+	}
+
 	function Player() {
 		let thisPlayer = this;
 		this.actions = 0;
@@ -186,10 +207,12 @@ function init() {
 		this.cards = {
 			deck: [],
 			discard: [],
-			hand: []
+			hand: [],
+			play: []
 		};
 		this.gain = {
 			qty: 0,
+			type: '',
 			value: 0
 		};
 		this.listeners = [];
@@ -222,17 +245,22 @@ function init() {
 		this.checkStatus = function() {
 			let hasKingdomCards = checkCardCategory(thisPlayer.cards.hand, 'kingdom_cards');
 			let hasTreasureCards = checkCardCategory(thisPlayer.cards.hand, 'treasure_cards');
+			let inActionPhase = thisPlayer.turnPhase === 'action';
+			let inBuyPhase;
 			let turnFinished = false;
 
-			let canPlayAction = thisPlayer.turnPhase === 'action' && thisPlayer.actions > 0 && hasKingdomCards;
+			let canBuy;
+			let canPlayAction = thisPlayer.actions > 0 && hasKingdomCards;
 
-			if (!canPlayAction) {
+			if (!canPlayAction && inActionPhase) {
 				thisPlayer.turnPhase = 'buy';
+				thisPlayer.sumTreasure();
 			}
 
-			let canBuy = thisPlayer.turnPhase === 'buy' && thisPlayer.buys > 0 && hasTreasureCards;
+			canBuy = thisPlayer.buys > 0 && hasTreasureCards;
+			inBuyPhase = thisPlayer.turnPhase === 'buy';
 
-			if (!canBuy) {
+			if (!canBuy && inBuyPhase) {
 				turnFinished = true;
 			}
 
@@ -241,10 +269,16 @@ function init() {
 
 		this.endTurn = function() {
 			thisPlayer.turnPhase = 'action';
+			thisPlayer.treasure = 0;
+			thisPlayer.gain.qty = 0;
+			thisPlayer.gain.type = '';
+			thisPlayer.gain.value = 0;
 
 			for (let i = 0; i < thisPlayer.listeners.length; i++) {
 				thisPlayer.listeners[i].element.removeEventListener('click', thisPlayer.listeners[i].func);
 			}
+
+			thisPlayer.listeners = [];
 
 			drawCards(thisPlayer.cards.hand, thisPlayer.cards.discard);
 
@@ -255,14 +289,15 @@ function init() {
 		this.gainCard = function(cardPile) {
 			let canAffordBuy = thisPlayer.buys > 0 && thisPlayer.treasure >= cardPile.cost;
 			let canAffordGain = thisPlayer.gain.qty > 0 && thisPlayer.gain.value >= cardPile.cost;
+			let correctCard = thisPlayer.gain.type === '' || thisPlayer.gain.type === cardPile.name;
 			let inBuyPhase = thisPlayer.turnPhase === 'buy';
 			let message = 'There are no more cards in this stack';
 
-			let canBuy = inBuyPhase && canAffordBuy;
-			let canGain = !inBuyPhase && canAffordGain;
+			let canBuyCard = inBuyPhase && canAffordBuy;
+			let canGainCard = !inBuyPhase && correctCard && canAffordGain;
 
 			if (cardPile.qty > 0) {
-				if (canBuy || canGain) {
+				if (canBuyCard || canGainCard) {
 					drawCards(cardPile, thisPlayer.cards.discard, 1);
 
 					thisPlayer.buys -= inBuyPhase;
@@ -289,15 +324,32 @@ function init() {
 		})();
 
 		this.initTurn = function() {
-			thisPlayer.actions++;
-			thisPlayer.buys++;
+			thisPlayer.actions = 1;
+			thisPlayer.buys = 1;
 			thisPlayer.checkDeck();
 
 			drawCards(thisPlayer.cards.deck, thisPlayer.cards.hand, 5);
 
+			let text = 'Player hand for this turn:\n';
+			for (let i = 0; i < 5; i++)
+				text += thisPlayer.cards.hand[i].name + '\n';
+			console.log(text);
+
 			printCards(thisPlayer.cards.hand, '#hand');
 
 			thisPlayer.addListeners();
+		};
+
+		this.sumTreasure = function() {
+			for (let i = 0; i < thisPlayer.cards.hand.length; i++) {
+				let isTreasure = thisPlayer.cards.hand[i].category === 'treasure_cards';
+
+				thisPlayer.treasure += isTreasure && thisPlayer.cards.hand[i].value;
+			}
+
+			for (let i = 0; i < thisPlayer.cards.play.length; i++) {
+				thisPlayer.treasure += thisPlayer.cards.play[i].value;
+			}
 		};
 	}
 
@@ -311,7 +363,7 @@ function init() {
 		this.listeners = [];
 		this.numPlayers = 1;
 		this.players = {};
-		this.turn = 1;
+		this.turn = 0;
 
 		this.checkPlayerStatus = function() {
 			let turnFinished = thisGame.activePlayer.checkStatus();
@@ -348,7 +400,7 @@ function init() {
 
 			thisGame.checkPlayerStatus();
 
-			thisGame.listeners.push(addHandler(document, 'click', thisGame.checkPlayerStatus));
+			document.onclick =  thisGame.checkPlayerStatus;
 		};
 
 		(this.initGame = function() {
@@ -362,7 +414,7 @@ function init() {
 			}
 
 			for (let category in thisGame.cardsInPlay) {
-				printCards(cards[category], `#${category}`);
+				printCards(cards[category], `#${category}`, 'cost');
 			}
 
 			printCards([{name: 'card_back'}], '#deck');

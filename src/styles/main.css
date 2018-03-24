@@ -1,4 +1,6 @@
 body, html, #board {
+	background: #222;
+	color: #FFF;
 	height: 100%;
 	margin: 0;
 }
@@ -8,8 +10,9 @@ div {
 }
 
 .card {
+	background: #222;
 	border-radius: 10px;
-	box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.25);
+	box-shadow: 2px 2px 2px rgba(255, 255, 255, 0.25);
 	cursor: pointer;
 	display: inline-block;
 	height: 210px;
