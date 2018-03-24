@@ -4,7 +4,9 @@ let game;
 
 function init() {
 	function Action(obj) {
-		return function(player) {
+		return function() {
+			let player = game.activePlayer;
+
 			player.actions += obj.actions || 0;
 			player.buys += obj.buys || 0;
 			player.gain.qty += obj.gain.qty || 0;
@@ -46,17 +48,17 @@ function init() {
 				workshop:		{qty: 10, cost: 3, action: new Action({gain: {qty: 1, value: 4}})}
 			},
 			penalty_cards: {
-				curse:			{qty: 30, victoryPoints: -1}
+				curse:			{qty: 30, victoryPoints: -1, action: function(){console.log('curse');}}
 			},
 			treasure_cards: {
-				copper:			{qty: 60, cost: 0, value: 1},
-				gold:			{qty: 30, cost: 6, value: 3},
-				silver:			{qty: 40, cost: 3, value: 2}
+				copper:			{qty: 60, cost: 0, value: 1, action: function(){console.log('copper');}},
+				gold:			{qty: 30, cost: 6, value: 3, action: function(){console.log('gold');}},
+				silver:			{qty: 40, cost: 3, value: 2, action: function(){console.log('silver');}}
 			},
 			victory_cards: {
-				duchy:			{qty: 12, cost: 5, victoryPoints: 3},
-				estate:			{qty: 24, cost: 2, victoryPoints: 1},
-				province:		{qty: 12, cost: 8, victoryPoints: 6}
+				duchy:			{qty: 12, cost: 5, victoryPoints: 3, action: function(){console.log('duchy');}},
+				estate:			{qty: 24, cost: 2, victoryPoints: 1, action: function(){console.log('estate');}},
+				province:		{qty: 12, cost: 8, victoryPoints: 6, action: function(){console.log('province');}}
 			}
 	};
 
@@ -120,9 +122,14 @@ function init() {
 			img.alt = `${cardsInPlay[card].name} Cost: ${cardsInPlay[card].cost}`;
 			img.className = 'card';
 			img.name = cardsInPlay[card].name;
+			img.setAttribute('category', cardsInPlay[card].category);
 			img.src = `images/${cardsInPlay[card].name}.jpg`;
 
 			target.append(img);
+
+			if (targetSelector.search('#hand') >= 0) {
+				addHandler(img, 'click', cardsInPlay[card].action);
+			}
 		}
 	}
 
