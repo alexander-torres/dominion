@@ -157,17 +157,23 @@ function init() {
 		return result;
 	}
 
-	function drawCards(fromCardPile, toCardPile, num) {
+	function drawCards(fromCardPile, toCardPile, num, targetSelector, sortKey) {
 		num = num || fromCardPile.length;
 
 		for (let i = 0; i < num; i++) {
+			let card;
+
 			if (Array.isArray(fromCardPile)) {
-				toCardPile.push(fromCardPile.pop());
+				card = fromCardPile.pop();
+			} else {
+				card = fromCardPile;
+				fromCardPile.qty--;
 			}
 
-			else {
-				toCardPile.push(fromCardPile);
-				fromCardPile.qty--;
+			toCardPile.push(card);
+
+			if (targetSelector) {
+				printCards(card, targetSelector, sortKey);
 			}
 		}
 	}
